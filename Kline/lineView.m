@@ -123,7 +123,11 @@
 
 #pragma mark 返回组装好的网址
 -(NSString*)changeUrl{
-    NSString *url = [[NSString alloc] initWithFormat:self.req_url,self.req_freq,self.req_type];
+    NSString *url = [[NSString alloc]initWithFormat:self.req_url,self.req_freq,self.req_type];
+    if (IF_SINA_FUTURE) {
+        url = @"http://stock2.finance.sina.com.cn/futures/api/json.php/CffexFuturesService.getCffexFuturesDailyKLine?symbol=IF1412";
+    }
+
     return url;
 }
 

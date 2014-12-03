@@ -25,16 +25,17 @@
 }
 
 -(id)initWithUrl:(NSString*)url{
+    NSLog(@"url:%@",url);
     if (self){
-        // 取缓存的每天数据
-        NSArray *tempArray = (NSArray*)[commond getUserDefaults:@"daydatas"];
-        if (tempArray.count>0) {
-            self.dayDatas = tempArray;
-        }
-        NSArray *lines = (NSArray*)[commond getUserDefaults:[commond md5HexDigest:url]];
-        if (lines.count>0) {
-            [self changeData:lines];
-        }else{
+//        // 取缓存的每天数据
+//        NSArray *tempArray = (NSArray*)[commond getUserDefaults:@"daydatas"];
+//        if (tempArray.count>0) {
+//            self.dayDatas = tempArray;
+//        }
+//        NSArray *lines = (NSArray*)[commond getUserDefaults:[commond md5HexDigest:url]];
+//        if (lines.count>0) {
+//            [self changeData:lines];
+//        }else{
             NSLog(@"url:%@",url);
             NSURL *nurl = [NSURL URLWithString:[url stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
             ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:nurl];
@@ -42,17 +43,30 @@
             [request setCachePolicy:ASIUseDefaultCachePolicy];
             [request startSynchronous];
             // 加载完成执行此块
+            NSLog(@"start requets");
             [self Finished:request];
-        }
+//        }
 	}
     return self;
 }
 
 - (void)Finished:(ASIHTTPRequest *)request
 {
-	self.status.text = @"";
-    NSString *content = [request responseString];
-    NSArray *lines = [content componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
+    self.status.text = @"";
+    NSArray *lines;
+    if (IF_SINA_FUTURE) {
+        NSData *content = [request responseData];
+        lines = [NSJSONSerialization JSONObjectWithData:content options:NSJSONReadingAllowFragments error:nil];
+        lines = [[lines reverseObjectEnumerator] allObjects];
+    }else{
+        
+        
+        
+        NSString *content = [request responseString];
+        
+        //NSLog(@"SUM%d",[lines count]);
+        lines = [content componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
+    }
     if ([self.req_type isEqualToString:@"d"]) {
         self.dayDatas = lines;
         [commond setUserDefaults:lines forKey:@"daydatas"];
@@ -74,12 +88,20 @@
     NSInteger idx;
     int MA5=5,MA10=10,MA20=20; // 均线统计
     for (idx = newArray.count-1; idx > 0; idx--) {
-        NSString *line = [newArray objectAtIndex:idx];
-        if([line isEqualToString:@""]){
-            continue;
+        NSArray *arr; NSString *line = [newArray objectAtIndex:idx];
+        if (IF_SINA_FUTURE) {
+            arr = [newArray objectAtIndex:idx];
+        }else{
+            
+            
+          
+            if([line isEqualToString:@""]){
+                continue;
+            }
+            arr = [line componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@","]];
         }
-        NSArray   *arr = [line componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@","]];
-        // 收盘价的最小值和最大值
+        //        // 收盘价的最小值和最大值
+        
         if ([[arr objectAtIndex:2] floatValue]>self.maxValue) {
             self.maxValue = [[arr objectAtIndex:2] floatValue];
         }
@@ -93,6 +115,10 @@
         if ([[arr objectAtIndex:5] floatValue]<self.volMinValue) {
             self.volMinValue = [[arr objectAtIndex:5] floatValue];
         }
+       
+        
+        
+        
         NSMutableArray *item =[[NSMutableArray alloc] init];
         [item addObject:[arr objectAtIndex:1]]; // open
         [item addObject:[arr objectAtIndex:2]]; // high
@@ -125,9 +151,18 @@
     CGFloat value = 0;
     if (data.count - range.location>range.length) {
         NSArray *newArray = [data objectsAtIndexes:[[NSIndexSet alloc] initWithIndexesInRange:range]];
-        for (NSString *item in newArray) {
-            NSArray *arr = [item componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@","]];
-            value += [[arr objectAtIndex:4] floatValue];
+        if (IF_SINA_FUTURE) {
+            for (NSArray *arr in newArray) {
+                
+                value += [[arr objectAtIndex:4] floatValue];
+            }
+            
+        }else{
+            
+            for (NSString *item in newArray) {
+                NSArray *arr = [item componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@","]];
+                value += [[arr objectAtIndex:4] floatValue];
+            }
         }
         if (value>0) {
             value = value / newArray.count;
