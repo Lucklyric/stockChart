@@ -27,15 +27,15 @@
 -(id)initWithUrl:(NSString*)url{
     NSLog(@"url:%@",url);
     if (self){
-//        // 取缓存的每天数据
-//        NSArray *tempArray = (NSArray*)[commond getUserDefaults:@"daydatas"];
-//        if (tempArray.count>0) {
-//            self.dayDatas = tempArray;
-//        }
-//        NSArray *lines = (NSArray*)[commond getUserDefaults:[commond md5HexDigest:url]];
-//        if (lines.count>0) {
-//            [self changeData:lines];
-//        }else{
+        // 取缓存的每天数据
+        NSArray *tempArray = (NSArray*)[commond getUserDefaults:@"daydatas"];
+        if (tempArray.count>0) {
+            self.dayDatas = tempArray;
+        }
+        NSArray *lines = (NSArray*)[commond getUserDefaults:[commond md5HexDigest:url]];
+        if (lines.count>0) {
+            [self changeData:lines];
+        }else{
             NSLog(@"url:%@",url);
             NSURL *nurl = [NSURL URLWithString:[url stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
             ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:nurl];
@@ -45,7 +45,7 @@
             // 加载完成执行此块
             NSLog(@"start requets");
             [self Finished:request];
-//        }
+        }
 	}
     return self;
 }
